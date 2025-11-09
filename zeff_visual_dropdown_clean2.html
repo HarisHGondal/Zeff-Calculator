@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Z_eff Visual Dropdown — Clean Modern</title>
+<style>
+  /* Modern, minimal template */
+  :root{
+    --bg: #f4fbfb;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --accent: #0ea5a4;
+    --accent-600: #089792;
+    --glass: rgba(10, 30, 34, 0.04);
+    --radius: 14px;
+    --shadow: 0 12px 36px rgba(9,20,26,0.08);
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#f7fdfa,#eef8f8);color:#041821}
+  .wrap{max-width:1060px;margin:36px auto;padding:18px}
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+  .brand{
+    display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0ea5a4,#38bdf8);
+    color:white;padding:12px;border-radius:12px;box-shadow:0 8px 28px rgba(11,124,116,0.12)
+  }
+  .brand .mark{width:44px;height:44;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800}
+  .brand h1{margin:0;font-size:16px;line-height:1}
+  .brand p{margin:0;font-size:12px;opacity:.9}
+
+  .layout{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+  .panel{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--glass)}
+  .controls h2{margin:0 0 8px 0;font-size:18px}
+  .controls p.lead{margin:0 0 12px 0;color:var(--muted);font-size:14px}
+
+  label{display:block;font-weight:700;margin-bottom:8px;color:#082528}
+  select, input[type="text"]{
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid #e6eef1;background:linear-gradient(180deg,#fff,#fbfffe);font-size:15px;outline:none;
+    transition:box-shadow .12s ease, border-color .12s ease;
+  }
+  select:focus,input:focus{box-shadow:0 10px 24px rgba(14,165,164,0.06);border-color:var(--accent-600)}
+
+  .meta-row{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .pill{padding:7px 12px;border-radius:999px;background:#f1fbfa;color:#0b3b36;font-weight:700;border:1px solid rgba(6,25,25,0.04);font-size:13px}
+
+  .row{display:flex;gap:10px;margin-top:14px}
+  .btn{
+    background:var(--accent);color:white;border:0;padding:11px 14px;border-radius:10px;font-weight:800;cursor:pointer;box-shadow:0 8px 22px rgba(14,165,164,0.08);
+  }
+  .btn.ghost{background:transparent;color:#0a3330;border:1px solid var(--glass);font-weight:700}
+  .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+
+  .card-stat{background:linear-gradient(180deg,#fcfffe,#f7fdfc);padding:12px;border-radius:10px;font-weight:800;color:#062726;min-height:72px;display:flex;flex-direction:column;justify-content:center}
+  .card-stat small{font-weight:700;color:var(--muted);font-size:12px}
+
+  .swatch{
+    margin-top:14px;border-radius:12px;border:1px solid var(--glass);height:96px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#052226;font-size:16px
+  }
+
+  /* Right column (reference / help) */
+  .help h3{margin:0 0 8px 0;font-size:16px}
+  .help p{margin:0;color:var(--muted);font-size:14px}
+  .legend{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+  .legend-item{display:flex;gap:10px;align-items:center}
+  .legend-swatch{width:36px;height:20px;border-radius:6px;border:1px solid rgba(2,6,23,0.04)}
+  .footer-note{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+
+  @media (max-width:980px){
+    .layout{grid-template-columns:1fr}
+    .swatch{height:84px}
+    .brand p{display:none}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark">Z</div>
+        <div>
+          <h1>Z<sub style="font-size:10px">eff</sub> Visual Tool</h1>
+          <p>Quick inspector for X-ray screening — pick or paste, then calculate.</p>
+        </div>
+      </div>
+      <div style="margin-left:auto;color:var(--muted);font-weight:700">Ranges from supplied image</div>
+    </div>
+
+    <div class="layout">
+      <!-- Left: controls + results -->
+      <section class="panel controls" aria-labelledby="controls-title">
+        <h2 id="controls-title">Select material & inspect</h2>
+        <p class="lead">Choose a material from the dropdown (title-cased labels). To enter your own formula, pick "Custom Formula".</p>
+
+        <label for="material">Material</label>
+        <select id="material" aria-label="Material dropdown"></select>
+
+        <div class="meta-row">
+          <div id="categoryPill" class="pill">Category: —</div>
+        </div>
+
+        <label for="formula" style="margin-top:12px">Custom formula (enable via dropdown)</label>
+        <input id="formula" type="text" placeholder="e.g. C7H5N3O6" disabled />
+
+        <div class="row">
+          <button id="calcBtn" class="btn" title="Calculate">Calculate</button>
+          <button id="clearBtn" class="btn ghost" title="Clear">Clear</button>
+        </div>
+
+        <div class="result-grid" aria-live="polite">
+          <div class="card-stat"><small>Interpreted formula</small><span id="outFormula">—</span></div>
+          <div class="card-stat"><small>Molar mass (g/mol)</small><span id="outMass">—</span></div>
+          <div class="card-stat"><small>Z_eff (approx)</small><span id="outZ">—</span></div>
+        </div>
+
+        <div id="swatch" class="swatch">Color preview</div>
+
+        <div class="footer-note" id="explain">Select a material and press Calculate to see color and approximation.</div>
+      </section>
+
+      <!-- Right: help / legend -->
+      <aside class="panel help" aria-labelledby="help-title">
+        <h3 id="help-title">Legend (from image)</h3>
+        <p style="margin-top:6px;color:var(--muted)">Color bands & ranges shown in the original image were used as the basis:</p>
+
+        <div class="legend">
+          <div class="legend-item"><div class="legend-swatch" style="background:rgb(250,204,21)"></div><div><strong>0–10</strong> — Organic (yellow/orange)</div></div>
+          <div class="legend-item"><div class="legend-swatch" style="background:rgb(16,185,129)"></div><div><strong>11–18</strong> — Inorganic (green)</div></div>
+          <div class="legend-item"><div class="legend-swatch" style="background:rgb(59,130,246)"></div><div><strong>19–56</strong> — Metals (blue)</div></div>
+          <div class="legend-item"><div class="legend-swatch" style="background:rgb(0,0,0)"></div><div><strong>57+</strong> — X-rays blocked (black)</div></div>
+        </div>
+
+        <div style="margin-top:12px;color:var(--muted);font-size:13px">
+          Rule: within a band the displayed color is light for lower Z and dark for higher Z (visual emphasis).
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+/* Single-file Z_eff visual tool
+   - New modern template
+   - Image preview removed
+   - Download button removed
+   - Footer text removed
+   - Dropdown labels shown in Title Case (acronym exceptions preserved)
+*/
+
+/* Element table (atomic number Z, atomic weight A) */
+const ELEMENTS = {
+  H:{Z:1,A:1.008}, He:{Z:2,A:4.0026}, Li:{Z:3,A:6.94}, Be:{Z:4,A:9.0122},
+  B:{Z:5,A:10.81}, C:{Z:6,A:12.011}, N:{Z:7,A:14.007}, O:{Z:8,A:15.999},
+  F:{Z:9,A:18.998}, Ne:{Z:10,A:20.18}, Na:{Z:11,A:22.99}, Mg:{Z:12,A:24.305},
+  Al:{Z:13,A:26.982}, Si:{Z:14,A:28.085}, P:{Z:15,A:30.974}, S:{Z:16,A:32.06},
+  Cl:{Z:17,A:35.45}, K:{Z:19,A:39.098}, Ca:{Z:20,A:40.078}, Fe:{Z:26,A:55.845},
+  Cu:{Z:29,A:63.546}, Zn:{Z:30,A:65.38}, Pb:{Z:82,A:207.2}, I:{Z:53,A:126.90}
+};
+
+/* Materials list & categories (key -> {f: formula, cat: category}) */
+const MATERIALS = {
+  "custom_formula": {f:"", cat:"Custom"},
+  "tnt": {f:"C7H5N3O6", cat:"Explosive"},
+  "rdx": {f:"C3H6N6O6", cat:"Explosive"},
+  "petn": {f:"C5H8N4O12", cat:"Explosive"},
+  "hmx": {f:"C4H8N8O8", cat:"Explosive"},
+  "nitroglycerin": {f:"C3H5N3O9", cat:"Explosive"},
+  "ammonium_nitrate": {f:"NH4NO3", cat:"Explosive Precursor"},
+  "anfo": {f:"NH4NO3", cat:"Explosive Precursor"},
+  "ammonium_perchlorate": {f:"NH4ClO4", cat:"Explosive Precursor"},
+  "kno3": {f:"KNO3", cat:"Explosive Precursor"},
+  "black_powder": {f:"KNO3", cat:"Explosive Proxy"},
+  "dnt": {f:"C7H6N2O4", cat:"Explosive Proxy"},
+  "egdn": {f:"C4H8N2O6", cat:"Explosive Proxy"},
+  "c4": {f:"C3H6N6O6", cat:"Explosive Proxy"},
+  "acetone_peroxide_proxy": {f:"C9H18O6", cat:"Explosive Proxy"},
+  "cocaine": {f:"C17H21NO4", cat:"Drug proxy"},
+  "heroin": {f:"C21H23NO5", cat:"Drug proxy"},
+  "morphine": {f:"C17H19NO3", cat:"Drug proxy"},
+  "codeine": {f:"C18H21NO3", cat:"Drug proxy"},
+  "methamphetamine": {f:"C10H15N", cat:"Drug proxy"},
+  "amphetamine": {f:"C9H13N", cat:"Drug proxy"},
+  "mdma": {f:"C11H15NO2", cat:"Drug proxy"},
+  "fentanyl": {f:"C22H28N2O", cat:"Drug proxy"},
+  "oxycodone": {f:"C18H21NO4", cat:"Drug proxy"},
+  "tramadol": {f:"C16H25NO2", cat:"Drug proxy"},
+  "thc": {f:"C21H30O2", cat:"Drug proxy"},
+  "cbd": {f:"C21H30O2", cat:"Drug proxy"},
+  "lsd": {f:"C20H25N3O", cat:"Drug proxy"},
+  "ketamine": {f:"C13H16ClNO", cat:"Drug proxy"},
+  "caffeine": {f:"C8H10N4O2", cat:"Pharma"},
+  "psilocybin": {f:"C12H17N2O4P", cat:"Drug proxy"},
+  "water": {f:"H2O", cat:"Household"},
+  "ethanol": {f:"C2H6O", cat:"Household"},
+  "methanol": {f:"CH4O", cat:"Household"},
+  "acetone": {f:"C3H6O", cat:"Household"},
+  "benzene": {f:"C6H6", cat:"Industrial"},
+  "toluene": {f:"C7H8", cat:"Industrial"},
+  "glycerol": {f:"C3H8O3", cat:"Household"},
+  "sucrose": {f:"C12H22O11", cat:"Food"},
+  "starch": {f:"C6H10O5", cat:"Food"},
+  "cellulose": {f:"C6H10O5", cat:"Household"},
+  "paper": {f:"C6H10O5", cat:"Household"},
+  "wood": {f:"C6H10O5", cat:"Household"},
+  "vegetable_oil": {f:"C57H104O6", cat:"Food"},
+  "petroleum": {f:"C16H34", cat:"Fuel"},
+  "diesel": {f:"C12H26", cat:"Fuel"},
+  "gasoline": {f:"C8H18", cat:"Fuel"},
+  "polyethylene": {f:"C2H4", cat:"Plastic"},
+  "polypropylene": {f:"C3H6", cat:"Plastic"},
+  "polystyrene": {f:"C8H8", cat:"Plastic"},
+  "pet": {f:"C10H8O4", cat:"Plastic"},
+  "pvc": {f:"C2H3Cl", cat:"Plastic"},
+  "ptfe": {f:"C2F4", cat:"Plastic"},
+  "nylon": {f:"C12H22N2O2", cat:"Plastic"},
+  "aluminum": {f:"Al", cat:"Metal"},
+  "iron": {f:"Fe", cat:"Metal"},
+  "steel": {f:"Fe", cat:"Metal"},
+  "copper": {f:"Cu", cat:"Metal"},
+  "lead": {f:"Pb", cat:"Metal"},
+  "zinc": {f:"Zn", cat:"Metal"},
+  "silica": {f:"SiO2", cat:"Mineral"},
+  "glass": {f:"SiO2", cat:"Mineral"},
+  "quartz": {f:"SiO2", cat:"Mineral"},
+  "sand": {f:"SiO2", cat:"Mineral"},
+  "concrete": {f:"CaCO3", cat:"Building"},
+  "limestone": {f:"CaCO3", cat:"Building"},
+  "gypsum": {f:"CaSO4", cat:"Building"},
+  "alumina": {f:"Al2O3", cat:"Building"},
+  "ceramic": {f:"Al2O3", cat:"Building"},
+  "brick": {f:"SiO2", cat:"Building"},
+  "aluminum_foil": {f:"Al", cat:"Item"},
+  "copper_wire": {f:"Cu", cat:"Item"},
+  "battery_lithium": {f:"Li", cat:"Item"},
+  "lead_acid_battery": {f:"Pb", cat:"Item"},
+  "stainless_steel": {f:"Fe", cat:"Item"},
+  "brass": {f:"Cu", cat:"Item"},
+  "urea": {f:"CH4N2O", cat:"Chemical"},
+  "potassium_nitrate": {f:"KNO3", cat:"Chemical"},
+  "sodium_nitrate": {f:"NaNO3", cat:"Chemical"},
+  "ammonium_chloride": {f:"NH4Cl", cat:"Chemical"},
+  "table_salt": {f:"NaCl", cat:"Chemical"},
+  "sodium_hydroxide": {f:"NaOH", cat:"Chemical"},
+  "calcium_oxide": {f:"CaO", cat:"Chemical"},
+  "calcium_carbonate": {f:"CaCO3", cat:"Chemical"},
+  "magnesium_oxide": {f:"MgO", cat:"Chemical"},
+  "sulfur": {f:"S", cat:"Chemical"},
+  "phosphorus": {f:"P", cat:"Chemical"},
+  "potassium_chlorate": {f:"KClO3", cat:"Chemical"},
+  "sodium_perchlorate": {f:"NaClO4", cat:"Chemical"},
+  "potassium_perchlorate": {f:"KClO4", cat:"Chemical"},
+  "diazepam": {f:"C16H13ClN2O", cat:"Drug proxy"},
+  "alprazolam": {f:"C17H13ClN4", cat:"Drug proxy"}
+};
+
+/* p exponent for Z_eff calculation */
+const P = 2.94;
+
+/* Bands & colors from image */
+const BANDS = [
+  {min:0, max:10, name:'Organic', base:[250,204,21], light:[255,236,161]},
+  {min:11, max:18, name:'Inorganic', base:[16,185,129], light:[178,241,210]},
+  {min:19, max:56, name:'Metals', base:[59,130,246], light:[183,212,252]},
+  {min:57, max:9999, name:'X-Rays Blocked', base:[0,0,0], light:[80,80,80]}
+];
+
+/* Helpers */
+function lerp(a,b,t){ return Math.round(a + (b-a)*t); }
+function rgbToCss(rgb){ return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`; }
+function mapZtoColor(z){
+  for(const band of BANDS){
+    if(z >= band.min && z <= band.max){
+      const denom = (band.max - band.min) || 1;
+      const t = (z - band.min) / denom;
+      const r = lerp(band.light[0], band.base[0], t);
+      const g = lerp(band.light[1], band.base[1], t);
+      const b = lerp(band.light[2], band.base[2], t);
+      return {css: rgbToCss([r,g,b]), band: band.name, range:`${band.min}–${band.max === 9999? '57+' : band.max}`};
+    }
+  }
+  return {css:'rgb(200,200,200)', band:'Unknown', range:'—'};
+}
+
+/* Simple formula parser (no parentheses) */
+function parseFormula(formula){
+  const re = /([A-Z][a-z]?)(\d*)/g;
+  let m; const out = {};
+  while((m = re.exec(formula)) !== null){
+    const el = m[1], cnt = m[2] ? parseInt(m[2],10) : 1;
+    out[el] = (out[el] || 0) + cnt;
+  }
+  if(Object.keys(out).length === 0) throw new Error('Cannot parse formula. Use simple format like C7H5N3O6');
+  return out;
+}
+
+/* Compute Z_eff */
+function computeZeff(formula){
+  const fd = parseFormula(formula);
+  for(const e of Object.keys(fd)) if(!(e in ELEMENTS)) throw new Error(`Element '${e}' not in database.`);
+  let molar = 0;
+  for(const [sym,cnt] of Object.entries(fd)) molar += cnt * ELEMENTS[sym].A;
+  const massFracs = {};
+  for(const [sym,cnt] of Object.entries(fd)) massFracs[sym] = (cnt * ELEMENTS[sym].A) / molar;
+  let sum = 0;
+  for(const sym of Object.keys(massFracs)){
+    sum += massFracs[sym] * Math.pow(ELEMENTS[sym].Z, P);
+  }
+  const zeff = Math.pow(sum, 1.0 / P);
+  return {molar, massFracs, sum, zeff, fd};
+}
+
+/* Title-case label with acronym exceptions */
+const ACRONYMS = {'tnt':'TNT','rdx':'RDX','c4':'C4','petn':'PETN','hmx':'HMX','egdn':'EGDN'};
+function titleCaseLabel(key){
+  if(ACRONYMS[key]) return ACRONYMS[key];
+  return key.replace(/_/g,' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+/* DOM refs */
+const selectEl = document.getElementById('material');
+const formulaEl = document.getElementById('formula');
+const calcBtn = document.getElementById('calcBtn');
+const clearBtn = document.getElementById('clearBtn');
+const outFormula = document.getElementById('outFormula');
+const outMass = document.getElementById('outMass');
+const outZ = document.getElementById('outZ');
+const swatchEl = document.getElementById('swatch');
+const explainEl = document.getElementById('explain');
+const categoryPill = document.getElementById('categoryPill');
+
+/* populate select (title-cased labels) */
+(function populate(){
+  const keys = Object.keys(MATERIALS).sort((a,b)=> a==='custom_formula'?-1: a.localeCompare(b));
+  for(const k of keys){
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.text = (k === 'custom_formula') ? 'Custom Formula (Enable Input)' : titleCaseLabel(k);
+    const cat = MATERIALS[k].cat || 'Other';
+    const f = MATERIALS[k].f || '';
+    opt.title = `${cat}${f ? ' — ' + f : ''}`;
+    selectEl.appendChild(opt);
+  }
+})();
+
+/* UI behavior */
+selectEl.addEventListener('change', ()=>{
+  const key = selectEl.value;
+  if(key === 'custom_formula'){ formulaEl.disabled = false; formulaEl.value = ''; categoryPill.textContent = 'Category: Custom'; categoryPill.title = 'Enter a chemical formula manually'; }
+  else { formulaEl.disabled = true; formulaEl.value = ''; categoryPill.textContent = 'Category: ' + (MATERIALS[key].cat || 'Other'); categoryPill.title = MATERIALS[key].cat || 'Other'; }
+});
+
+calcBtn.addEventListener('click', ()=>{
+  const key = selectEl.value;
+  let formulaStr, inputLabel;
+  if(key === 'custom_formula'){
+    const v = formulaEl.value.trim();
+    if(!v){ alert('Enter a chemical formula when Custom Formula is selected'); return; }
+    formulaStr = v.replace(/\s+/g,'');
+    inputLabel = formulaStr;
+  } else {
+    formulaStr = MATERIALS[key].f;
+    inputLabel = titleCaseLabel(key);
+    if(!formulaStr){ alert('Selected material has no formula defined'); return; }
+  }
+
+  try{
+    const res = computeZeff(formulaStr);
+    outFormula.textContent = formulaStr;
+    outMass.textContent = res.molar.toFixed(3);
+    outZ.textContent = res.zeff.toFixed(3);
+    const col = mapZtoColor(res.zeff);
+    swatchEl.style.background = col.css;
+    const rgb = col.css.match(/\d+/g).map(Number);
+    const lum = 0.2126*rgb[0] + 0.7152*rgb[1] + 0.0722*rgb[2];
+    swatchEl.style.color = lum > 160 ? '#062726' : '#f3f7f7';
+    explainEl.textContent = `Input: ${inputLabel} — Band: ${col.band} (${col.range}). Approx Z_eff: ${res.zeff.toFixed(3)}.`;
+    window._last = {input: inputLabel, formula: formulaStr, molar: res.molar, zeff: res.zeff, band: col.band, color: col.css, category: MATERIALS[key].cat || '—'};
+  }catch(err){
+    alert('Error: ' + err.message);
+  }
+});
+
+clearBtn.addEventListener('click', ()=>{
+  selectEl.value = 'tnt';
+  selectEl.dispatchEvent(new Event('change'));
+  formulaEl.value = '';
+  outFormula.textContent = '—'; outMass.textContent = '—'; outZ.textContent = '—';
+  swatchEl.style.background = 'transparent'; explainEl.textContent = 'Select a material and press Calculate to see color and approximation.';
+  window._last = null;
+});
+
+/* init */
+document.addEventListener('DOMContentLoaded', ()=>{
+  selectEl.value = 'tnt';
+  selectEl.dispatchEvent(new Event('change'));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Z_eff Calculator — X-ray Screening (Modern)</title>
+<style>
+  :root{
+    --bg:#f6fbfb;
+    --card:#ffffff;
+    --muted:#64748b;
+    --accent:#0ea5a4;
+    --accent-600:#089792;
+    --danger:#ef4444;
+    --glass: rgba(15,23,42,0.03);
+    --radius:14px;
+    --fw-medium:600;
+    --mono: "SFMono-Regular", ui-monospace, "Roboto Mono", "Segoe UI Mono", monospace;
+  }
+
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#f8fdfd,#f6fbfb); color:#07203b}
+  .page{min-height:100vh;display:flex;flex-direction:column}
+  header{
+    background:transparent;
+    padding:20px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 1px 0 rgba(12,21,31,0.03);
+  }
+  .header-inner{max-width:1100px;width:100%;display:flex;align-items:center;gap:12px}
+  .logo{
+    display:flex;align-items:center;gap:10px;font-weight:700;color:var(--accent-600);
+  }
+  .logo-mark{
+    width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ea5a4,#38bdf8);display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:800;box-shadow:0 6px 18px rgba(10,132,120,0.12);
+  }
+  .header-right{margin-left:auto;color:var(--muted);font-size:14px}
+
+  main{flex:1;display:flex;justify-content:center;padding:22px}
+  .container{max-width:1100px;width:100%;display:grid;grid-template-columns:1fr 440px;gap:18px}
+  /* card */
+  .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:0 10px 30px rgba(12,21,31,0.06);transition:transform .18s ease, box-shadow .18s ease}
+  .card:focus-within{transform:translateY(-3px);box-shadow:0 18px 40px rgba(12,21,31,0.09)}
+  h2{margin:0 0 10px 0;font-size:18px;color:#06202f}
+  p.lead{margin:0 0 14px 0;color:var(--muted);font-size:14px}
+
+  /* left: main controls */
+  .input-row{display:flex;gap:8px;align-items:center}
+  .input{
+    flex:1;padding:12px 14px;border-radius:10px;border:1px solid #e6eef5;font-size:15px;background:linear-gradient(180deg,#fff,#fbfeff);
+    outline:none;transition:box-shadow .12s ease, border-color .12s ease;
+  }
+  .input:focus{box-shadow:0 6px 18px rgba(14,165,164,0.08);border-color:var(--accent-600)}
+  .btn{
+    background:var(--accent);color:white;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;transition:transform .08s ease, box-shadow .08s ease;
+    box-shadow:0 8px 22px rgba(14,165,164,0.08)
+  }
+  .btn.secondary{background:#eef6f6;color:#083038;font-weight:600;box-shadow:none;border:1px solid rgba(2,6,23,0.04)}
+  .btn.small{padding:8px 10px;border-radius:8px;font-size:13px}
+
+  .quick-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{background:var(--glass);padding:8px 10px;border-radius:9px;font-weight:600;color:var(--muted);cursor:pointer;transition:background .12s ease, transform .08s ease}
+  .chip:hover{background:linear-gradient(90deg,#eefaf9,#f7ffff);transform:translateY(-2px)}
+
+  /* results */
+  .results{margin-top:14px;display:flex;gap:12px;flex-direction:column}
+  pre.output{
+    background:#0f172a;color:#e6f3f2;padding:14px;border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.5;overflow:auto;
+    box-shadow:inset 0 -6px 40px rgba(255,255,255,0.02)
+  }
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .stat{background:linear-gradient(180deg,#fcfffe,#f1fbfb);border-radius:9px;padding:10px;font-weight:700;color:#06202f;display:flex;flex-direction:column;align-items:flex-start}
+  .stat small{font-weight:600;color:var(--muted);font-size:12px}
+
+  /* right column: reference & legend */
+  .aside .legend-card{display:flex;flex-direction:column;gap:8px}
+  .legend-item{display:flex;align-items:center;gap:10px}
+  .swatch{width:36px;height:24px;border-radius:6px;box-shadow:0 6px 16px rgba(2,6,23,0.06)}
+  .swatch.org{background:linear-gradient(90deg,#f6ad55,#fb7185)}
+  .swatch.inorg{background:linear-gradient(90deg,#34d399,#10b981)}
+  .swatch.metal{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
+
+  .materials-list{max-height:320px;overflow:auto;padding-right:6px;margin-top:8px}
+  .materials-list button{width:100%;text-align:left;padding:8px;border-radius:8px;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}
+  .materials-list button:hover{background:linear-gradient(90deg,#f8ffff,#f2ffff);color:#04202b}
+
+  footer{padding:18px;text-align:center;color:var(--muted);font-size:13px;box-shadow:0 -1px 0 rgba(12,21,31,0.03)}
+  a.link{color:var(--accent-600);text-decoration:none;font-weight:700}
+
+  /* responsive */
+  @media (max-width:980px){
+    .container{grid-template-columns:1fr;padding:0 8px}
+    .aside{order:2}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-mark">Z</div>
+          <div>
+            <div style="font-size:16px">Z<sub style="font-size:10px">eff</sub> Calculator</div>
+            <div style="font-size:12px;color:var(--muted);font-weight:600">X-ray screening — material discrimination</div>
+          </div>
+        </div>
+        <div class="header-right">Dual-energy approximation • p = 2.94</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <!-- LEFT: main controls + results -->
+        <section class="card" aria-labelledby="main-title">
+          <h2 id="main-title">Compute Effective Atomic Number (Z<sub>eff</sub>)</h2>
+          <p class="lead">Enter a material name (common name) or a chemical formula (<code>C7H5N3O6</code>) and press <strong>Calculate</strong>. Useful for training customs, ANF and screeners.</p>
+
+          <div class="input-row" role="group" aria-label="input group">
+            <input id="input" class="input" type="text" placeholder="e.g. TNT or C7H5N3O6 — try 'TNT'"/>
+            <button id="calc" class="btn" title="Calculate Z_eff">Calculate</button>
+            <button id="clear" class="btn secondary small" title="Clear input">Clear</button>
+          </div>
+
+          <div class="quick-list" aria-hidden="false" id="quickList" title="Quick examples"></div>
+
+          <div class="results" id="resultsArea" aria-live="polite">
+            <div class="stats" id="stats">
+              <div class="stat"><small>Interpreted formula</small><span id="stat-formula">—</span></div>
+              <div class="stat"><small>Molar mass (g/mol)</small><span id="stat-mass">—</span></div>
+              <div class="stat"><small>Z_eff (approx)</small><span id="stat-zeff">—</span></div>
+            </div>
+
+            <pre id="output" class="output" aria-label="calculation output">Results will appear here. Example: press "TNT" from quick examples and Calculate.</pre>
+
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="copy" class="btn secondary small">Copy Results</button>
+              <button id="download" class="btn secondary small">Download TXT</button>
+              <button id="print" class="btn secondary small">Print</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT: legend & material list -->
+        <aside class="card aside" aria-labelledby="legend-title">
+          <h2 id="legend-title">Legend & Quick Materials</h2>
+          <p class="lead">Color bands (typical dual-energy mapping):</p>
+
+          <div class="legend-card">
+            <div class="legend-item"><div class="swatch swatch-org"></div><div><strong>Organic</strong> — Z ≈ 6–8 (orange)</div></div>
+            <div class="legend-item"><div class="swatch swatch-inorg"></div><div><strong>Inorganic</strong> — Z ≈ 8–12 (green)</div></div>
+            <div class="legend-item"><div class="swatch swatch-metal"></div><div><strong>Metal</strong> — Z &gt; 12 (blue)</div></div>
+          </div>
+
+          <h3 style="margin-top:12px;margin-bottom:6px">Common materials (click to use)</h3>
+          <div class="materials-list" id="materialsList" role="list"></div>
+
+          <p style="margin-top:12px;color:var(--muted);font-size:13px">Tip: many organics & explosives cluster around Z<sub>eff</sub> ≈ 6.9–7.3 — use shape/context + operator judgement.</p>
+        </aside>
+      </div>
+    </main>
+
+    <footer>
+      Z<sub>eff</sub> approximation (p = 2.94). For training use only — not a chemical test. &nbsp; • &nbsp;
+      <span style="margin-left:8px">Made for customs & ANF training</span>
+    </footer>
+  </div>
+
+<script>
+/*
+  Modern Z_eff Calculator
+  - Supports material name lookup OR simple chemical formulas (e.g. C7H5N3O6)
+  - Simple parser: supports element symbols (1 or 2 letters) followed by optional digits.
+  - Does NOT support parentheses or complex grouped formulas.
+  - p = 2.94 used for approximation typical in X-ray material discrimination.
+*/
+
+/* ELEMENT DATABASE: atomic number Z, atomic weight A (g/mol)
+   Include elements likely to appear in materials list.
+*/
+const ELEMENTS = {
+  H:{Z:1,A:1.008}, He:{Z:2,A:4.0026}, Li:{Z:3,A:6.94}, Be:{Z:4,A:9.0122},
+  B:{Z:5,A:10.81}, C:{Z:6,A:12.011}, N:{Z:7,A:14.007}, O:{Z:8,A:15.999},
+  F:{Z:9,A:18.998}, Ne:{Z:10,A:20.180}, Na:{Z:11,A:22.990}, Mg:{Z:12,A:24.305},
+  Al:{Z:13,A:26.982}, Si:{Z:14,A:28.085}, P:{Z:15,A:30.974}, S:{Z:16,A:32.06},
+  Cl:{Z:17,A:35.45}, Ar:{Z:18,A:39.948}, K:{Z:19,A:39.098}, Ca:{Z:20,A:40.078},
+  Sc:{Z:21,A:44.956}, Ti:{Z:22,A:47.867}, V:{Z:23,A:50.942}, Cr:{Z:24,A:51.996},
+  Mn:{Z:25,A:54.938}, Fe:{Z:26,A:55.845}, Co:{Z:27,A:58.933}, Ni:{Z:28,A:58.693},
+  Cu:{Z:29,A:63.546}, Zn:{Z:30,A:65.38}, Br:{Z:35,A:79.904}, Ag:{Z:47,A:107.87},
+  I:{Z:53,A:126.90}, Ba:{Z:56,A:137.33}, Pb:{Z:82,A:207.2}
+};
+
+/* big materials lookup (lowercase keys) — ~100 common materials including explosives & drugs
+   IMPORTANT: formulas avoid parentheses / grouped multipliers; use simple monomer proxies for polymers.
+*/
+const MATERIALS_LOOKUP = {
+  // Explosives / precursors / common training proxies
+  "tnt":"C7H5N3O6", "rdx":"C3H6N6O6", "petn":"C5H8N4O12", "hmx":"C4H8N8O8",
+  "nitroglycerin":"C3H5N3O9", "ammonium_nitrate":"NH4NO3", "anfo":"NH4NO3",
+  "ammonium_perchlorate":"NH4ClO4", "kno3":"KNO3", "black_powder":"KNO3",
+  "dnt":"C7H6N2O4", "egdn":"C4H8N2O6", "smokeless_powder":"C6H7O5",
+  "c4":"C3H6N6O6", "acetone_peroxide_proxy":"C9H18O6", "petn_proxy":"C5H8N4O12",
+
+  // Common drugs / controlled substances
+  "cocaine":"C17H21NO4", "heroin":"C21H23NO5", "morphine":"C17H19NO3", "codeine":"C18H21NO3",
+  "methamphetamine":"C10H15N", "amphetamine":"C9H13N", "mdma":"C11H15NO2",
+  "fentanyl":"C22H28N2O", "oxycodone":"C18H21NO4", "tramadol":"C16H25NO2",
+  "thc":"C21H30O2", "cbd":"C21H30O2", "lsd":"C20H25N3O", "ketamine":"C13H16ClNO",
+  "caffeine":"C8H10N4O2", "psilocybin":"C12H17N2O4P",
+
+  // Common household & industrial organics
+  "water":"H2O", "ethanol":"C2H6O", "methanol":"CH4O", "acetone":"C3H6O",
+  "benzene":"C6H6", "toluene":"C7H8", "naphthalene":"C10H8", "glycerol":"C3H8O3",
+  "sucrose":"C12H22O11", "starch":"C6H10O5", "cellulose":"C6H10O5", "paper":"C6H10O5",
+  "wood":"C6H10O5", "vegetable_oil":"C57H104O6", "petroleum":"C16H34", "diesel":"C12H26",
+  "gasoline":"C8H18",
+
+  // Plastics / polymers (monomer proxies)
+  "polyethylene":"C2H4", "polypropylene":"C3H6", "polystyrene":"C8H8",
+  "pet":"C10H8O4", "pvc":"C2H3Cl", "ptfe":"C2F4", "nylon":"C12H22N2O2", "polycarbonate":"C15H16O2",
+
+  // Minerals / ceramics / glass
+  "aluminum":"Al", "aluminium":"Al", "iron":"Fe", "steel":"Fe", "copper":"Cu", "lead":"Pb", "zinc":"Zn",
+  "silica":"SiO2", "glass":"SiO2", "quartz":"SiO2", "sand":"SiO2", "concrete":"CaCO3", "limestone":"CaCO3",
+  "gypsum":"CaSO4", "alumina":"Al2O3", "ceramic":"Al2O3", "brick":"SiO2",
+
+  // Metals & items
+  "aluminum_foil":"Al", "copper_wire":"Cu", "battery_lithium":"Li", "lead_acid_battery":"Pb",
+  "stainless_steel":"Fe", "brass":"Cu", "bronze":"Cu",
+
+  // Agriculture / fertilizers
+  "urea":"CH4N2O", "potassium_nitrate":"KNO3", "sodium_nitrate":"NaNO3", "ammonium_chloride":"NH4Cl",
+
+  // Inorganic salts / chemicals
+  "table_salt":"NaCl", "sodium_chloride":"NaCl", "sodium_hydroxide":"NaOH", "calcium_oxide":"CaO",
+  "calcium_carbonate":"CaCO3", "magnesium_oxide":"MgO", "sulfur":"S", "phosphorus":"P",
+
+  // Propellants / oxidizers
+  "potassium_chlorate":"KClO3", "sodium_perchlorate":"NaClO4", "potassium_perchlorate":"KClO4",
+
+  // Drugs / pharma examples (additional)
+  "diazepam":"C16H13ClN2O", "alprazolam":"C17H13ClN4", "oxycodone_hcl":"C18H21NO4",
+  "codeine_phosphate_proxy":"C18H21NO3", "pseudoephedrine":"C10H15NO", "ephedrine":"C10H15NO",
+  "amoxicillin":"C16H19N3O5S", "insulin_proxy":"C257H383N65O77S6",
+
+  // Foodstuffs / organics
+  "meat_proxy":"C6H10O5N", "fat_proxy":"C57H104O6", "milk_proxy":"C18H34O2", "cheese_proxy":"C18H34O2",
+
+  // Textiles & fibers
+  "wool_proxy":"C18H34N2O3S", "silk_proxy":"C6H10O5N", "nylon_66":"C12H22N2O2", "cotton":"C6H10O5",
+
+  // Household products
+  "paint":"C8H8O2", "soap":"C17H35COO", "detergent_proxy":"C12H25SO4Na", "glue":"C10H8O2",
+
+  // Electronics / misc
+  "pcb_proxy":"Cu", "rubber_proxy":"C5H8", "leather_proxy":"C6H10O5N",
+  "paint_thinner":"C7H8", "varnish_proxy":"C15H12O2", "charcoal":"C", "coal":"C", "natural_gas":"CH4",
+
+  // More recreational & synthetic
+  "benzodiazepine":"C16H13ClN2O", "synthetic_opioid_proxy":"C22H28N2O", "phenol":"C6H6O", "aniline":"C6H7N",
+
+  // Packaging / common items
+  "glass_bottle":"SiO2", "ceramic_plate":"Al2O3", "porcelain":"Al2O3", "rubber_tire":"C5H8",
+  "plastic_bottle":"C8H8", "foam":"C8H8", "foam_proxy":"C8H8"
+};
+
+/* exponent used for approximation */
+const P = 2.94;
+
+/* Simple formula parser (no parentheses, no groups). Accepts C7H5N3O6 style. */
+function parseFormula(formula){
+  const regex = /([A-Z][a-z]?)(\d*)/g;
+  let m; const out = {};
+  while((m = regex.exec(formula)) !== null){
+    const el = m[1];
+    const cnt = m[2] ? parseInt(m[2],10) : 1;
+    out[el] = (out[el] || 0) + cnt;
+  }
+  if(Object.keys(out).length === 0) throw new Error('Cannot parse formula. Use e.g. C7H5N3O6');
+  return out;
+}
+
+function computeZeffFromFormulaDict(fd){
+  // Validate elements
+  for(const e of Object.keys(fd)){
+    if(!(e in ELEMENTS)) throw new Error(`Element '${e}' not in database. Add it if necessary.`);
+  }
+  // molar mass
+  let molarMass = 0;
+  for(const [sym,cnt] of Object.entries(fd)){
+    molarMass += cnt * ELEMENTS[sym].A;
+  }
+  // mass fractions
+  const massFracs = {};
+  for(const [sym,cnt] of Object.entries(fd)){
+    massFracs[sym] = (cnt * ELEMENTS[sym].A) / molarMass;
+  }
+  // sum w_i * Z_i^p
+  let sum = 0;
+  const zi_p = {};
+  for(const [sym] of Object.entries(fd)){
+    zi_p[sym] = Math.pow(ELEMENTS[sym].Z, P);
+    sum += massFracs[sym] * zi_p[sym];
+  }
+  const zeff = Math.pow(sum, 1.0 / P);
+  return {molarMass, massFracs, zi_p, sum, zeff};
+}
+
+/* UI wiring */
+const inputEl = document.getElementById('input');
+const calcBtn = document.getElementById('calc');
+const clearBtn = document.getElementById('clear');
+const outputPre = document.getElementById('output');
+const statFormula = document.getElementById('stat-formula');
+const statMass = document.getElementById('stat-mass');
+const statZeff = document.getElementById('stat-zeff');
+const quickList = document.getElementById('quickList');
+const materialsList = document.getElementById('materialsList');
+const copyBtn = document.getElementById('copy');
+const downloadBtn = document.getElementById('download');
+const printBtn = document.getElementById('print');
+
+/* populate quick examples and materials list */
+const QUICK = ['TNT','RDX','Water','Paper','NaCl','Aluminum','Sugar','PET','C4','Fentanyl'];
+QUICK.forEach(name => {
+  const c = document.createElement('div');
+  c.className = 'chip';
+  c.textContent = name;
+  c.onclick = ()=> inputEl.value = name;
+  quickList.appendChild(c);
+});
+Object.keys(MATERIALS_LOOKUP).sort().forEach(k=>{
+  const b = document.createElement('button');
+  b.textContent = k.replace(/_/g,' ');
+  b.onclick = ()=> inputEl.value = k;
+  materialsList.appendChild(b);
+});
+
+/* helpers */
+function interpretInput(text){
+  const key = text.trim().toLowerCase();
+  if(MATERIALS_LOOKUP[key]) return {formula: MATERIALS_LOOKUP[key], source: 'lookup'};
+  const candidate = text.replace(/\s+/g,'');
+  // accept if simple pattern matches (letters + optional digits)
+  if(/^[A-Za-z][A-Za-z0-9]*$/.test(candidate)){
+    // try parsing
+    try{ parseFormula(candidate); return {formula: candidate, source: 'direct'}; }
+    catch(e){ throw new Error('Unknown material and not parseable formula. Try TNT or C7H5N3O6'); }
+  }
+  throw new Error('Unknown material and not a parseable chemical formula.');
+}
+
+function buildOutputText(name, formula, result){
+  const {molarMass, massFracs, zi_p, sum, zeff} = result;
+  let lines = [];
+  lines.push(`Input: ${name}`);
+  lines.push(`Interpreted formula: ${formula}`);
+  lines.push(`Molar mass (g/mol): ${molarMass.toFixed(4)}`);
+  lines.push('');
+  lines.push('Mass fractions and contributions:');
+  for(const sym of Object.keys(massFracs)){
+    const mf = massFracs[sym];
+    const z = ELEMENTS[sym].Z;
+    lines.push(` ${sym}: mass frac = ${mf.toFixed(6)}, Z = ${z}, Z^p = ${zi_p[sym].toFixed(6)}, term = ${(mf * zi_p[sym]).toFixed(6)}`);
+  }
+  lines.push('');
+  lines.push(`Sum(w_i * Z_i^p) = ${sum.toFixed(6)}`);
+  lines.push(`Z_eff = Sum^(1/p) = ${sum.toFixed(6)}^(1/${P}) = ${zeff.toFixed(6)}`);
+  let band = 'Organic (≈6–8)';
+  if(zeff > 12) band = 'Metal (>12)';
+  else if(zeff > 8) band = 'Inorganic (8–12)';
+  lines.push('');
+  lines.push(`Interpretation: Z_eff ≈ ${zeff.toFixed(3)} -> ${band}`);
+  lines.push('');
+  lines.push('Note: values are approximations for typical dual-energy X-ray discrimination. Use context and image cues when screening.');
+  return lines.join('\n');
+}
+
+/* actions */
+calcBtn.addEventListener('click', ()=>{
+  const val = inputEl.value.trim();
+  if(!val){ outputPre.textContent = 'Please enter a material name or chemical formula.'; return; }
+  try{
+    const resolved = interpretInput(val);
+    const formula = resolved.formula;
+    const fd = parseFormula(formula);
+    const res = computeZeffFromFormulaDict(fd);
+    outputPre.textContent = buildOutputText(val, formula, res);
+    statFormula.textContent = formula;
+    statMass.textContent = res.molarMass.toFixed(3);
+    statZeff.textContent = res.zeff.toFixed(3);
+  }catch(err){
+    outputPre.textContent = `Error: ${err.message}`;
+    statFormula.textContent = '—';
+    statMass.textContent = '—';
+    statZeff.textContent = '—';
+  }
+});
+
+clearBtn.addEventListener('click', ()=>{
+  inputEl.value = ''; outputPre.textContent = 'Results will appear here. Example: press "TNT" from quick examples and Calculate.'; statFormula.textContent='—'; statMass.textContent='—'; statZeff.textContent='—';
+});
+
+copyBtn.addEventListener('click', async ()=>{
+  try{
+    await navigator.clipboard.writeText(outputPre.textContent);
+    copyBtn.textContent = 'Copied!';
+    setTimeout(()=> copyBtn.textContent = 'Copy Results', 1200);
+  }catch(e){
+    alert('Copy failed — select and copy manually.');
+  }
+});
+
+downloadBtn.addEventListener('click', ()=>{
+  const text = outputPre.textContent || '';
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'zeff_result.txt'; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+printBtn.addEventListener('click', ()=> {
+  const w = window.open('', '_blank');
+  w.document.write(`<pre style="font-family:monospace;padding:20px">${outputPre.textContent}</pre>`);
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
+});
+
+/* allow Enter key to calculate */
+inputEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') { calcBtn.click(); e.preventDefault(); } });
+
+/* initialize */
+document.addEventListener('DOMContentLoaded', ()=> {
+  // nothing extra needed for now
+});
+</script>
+</body>
+</html>
